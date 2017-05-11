@@ -30,14 +30,11 @@ fn handle_message(message: Message,
         Some(match Regex::new(&content[6..]) {
             Ok(regex) => {
                 if greps.iter()
-                    .filter(|&&(_, id)| id == author.id)
-                    .filter(|&&(ref regex, _)| regex.as_str() == &content[6..])
-                    .next()
-                    .is_some() {
-                    format!("Regex already exists")
+                    .any(|&(ref regex, id)| id == author.id && regex.as_str() == &content[6..]) {
+                    "Regex already exists".into()
                 } else {
                     greps.push((regex, author.id));
-                    format!("Regex Added")
+                    "Regex Added".into()
                 }
             }
             Err(error) => format!("Invalid regex. {}", error),
@@ -45,25 +42,24 @@ fn handle_message(message: Message,
     } else if content.starts_with("!ungrep") {
         let mut removals = false;
         greps.retain(|&(ref regex, id)| {
-            if id != author.id {
-                true
-            } else if regex.as_str() == &content[8..] {
+            if id == author.id && regex.as_str() == &content[8..] {
                 removals = true;
                 false
             } else {
                 true
             }
         });
-        match removals {
-            true => Some(format!("Regex {} removed", &content[8..])),
-            false => Some(format!("Regex {} was not found", &content[8..])),
+        if removals {
+            Some(format!("Refex {} removed", &content[8..]))
+        } else {
+            Some(format!("Regex {} was not found", &content[8..]))
         }
     } else if content == "!mygreps" {
         Some(greps.iter()
             .filter(|&&(_, id)| id == author.id)
             .map(|&(ref regex, _)| regex)
             .fold(String::new(),
-                  |string, ref regex| format!("{}\n{}", string, regex)))
+                  |string, regex| format!("{}\n{}", string, regex)))
     } else {
         let users: HashSet<_> = greps.iter()
             .filter(|&&(ref regex, _)| regex.is_match(&content))
@@ -74,12 +70,12 @@ fn handle_message(message: Message,
                 None => true,
             })
             .collect();
-        if users.len() > 0 {
+        if !users.is_empty() {
             Some(users.into_iter()
                 .inspect(|&id| {
                     timeouts.insert((id, channel), Instant::now());
                 })
-                .fold(format!("Hey!"),
+                .fold("Hey!".into(),
                       |string, id| format!("{} {}", string, id.mention())))
         } else {
             None
@@ -97,23 +93,17 @@ fn main() {
         .expect("Login Failed");
     let mut connection = match discord.connect() {
         Ok((connection, _)) => connection,
-        Err(_) => panic!("Unable to connect to discord API"),
+        Err(e) => panic!("Unable to connect to discord API: {}", e),
     };
     // generic fun stuff
     connection.set_game_name("Talk to me with !grephelp".to_string());
     // main loop time
     while let Ok(event) = connection.recv_event() {
-        match event {
-            Event::MessageCreate(message) => {
-                let channel = message.channel_id;
-                match handle_message(message, &mut greps, &mut timeouts) {
-                    Some(content) => {
-                        let _ = discord.send_message(channel, &content, "", false);
-                    }
-                    None => {}
-                };
+        if let Event::MessageCreate(message) = event {
+            let channel = message.channel_id;
+            if let Some(content) = handle_message(message, &mut greps, &mut timeouts) {
+                let _ = discord.send_message(channel, &content, "", false);
             }
-            _ => {}
         }
     }
 }
