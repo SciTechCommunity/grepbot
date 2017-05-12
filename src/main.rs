@@ -26,40 +26,42 @@ fn handle_message(message: Message,
 
     if content == "!grephelp" {
         Some(include_str!("help.md").into())
-    } else if content.starts_with("!grep") {
-        Some(match Regex::new(&content[6..]) {
-            Ok(regex) => {
-                if greps.iter()
-                    .any(|&(ref regex, id)| id == author.id && regex.as_str() == &content[6..]) {
-                    "Regex already exists".into()
-                } else {
-                    greps.push((regex, author.id));
-                    "Regex Added".into()
-                }
-            }
-            Err(error) => format!("Invalid regex. {}", error),
-        })
-    } else if content.starts_with("!ungrep") {
-        let mut removals = false;
-        greps.retain(|&(ref regex, id)| {
-            if id == author.id && regex.as_str() == &content[8..] {
-                removals = true;
-                false
-            } else {
-                true
-            }
-        });
-        if removals {
-            Some(format!("Refex {} removed", &content[8..]))
-        } else {
-            Some(format!("Regex {} was not found", &content[8..]))
-        }
     } else if content == "!mygreps" {
         Some(greps.iter()
             .filter(|&&(_, id)| id == author.id)
             .map(|&(ref regex, _)| regex)
             .fold(String::new(),
                   |string, regex| format!("{}\n{}", string, regex)))
+    } else if content.starts_with("!grep ") {
+        content.splitn(2, ' ').nth(1).map(|pattern| match Regex::new(pattern) {
+            Ok(regex) => {
+                if greps.iter()
+                    .any(|&(ref regex, id)| id == author.id && regex.as_str() == pattern) {
+                    "Regex already exists".into()
+                } else {
+                    greps.push((regex, author.id));
+                    "Regex added".into()
+                }
+            }
+            Err(error) => format!("Invalid regex. {}", error),
+        })
+    } else if content.starts_with("!ungrep ") {
+        content.splitn(2, ' ').nth(1).map(|pattern| {
+            let mut removals = false;
+            greps.retain(|&(ref regex, id)| {
+                if id == author.id && regex.as_str() == pattern {
+                    removals = true;
+                    false
+                } else {
+                    true
+                }
+            });
+            if removals {
+                format!("Regex {} removed", pattern)
+            } else {
+                format!("Regex {} was not found", pattern)
+            }
+        })
     } else {
         let users: HashSet<_> = greps.iter()
             .filter(|&&(ref regex, _)| regex.is_match(&content))
