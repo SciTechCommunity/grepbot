@@ -1,4 +1,3 @@
-#![feature(retain_hash_collection)]
 extern crate discord;
 extern crate regex;
 
