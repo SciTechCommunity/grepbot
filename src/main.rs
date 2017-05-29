@@ -153,6 +153,7 @@ fn main() {
         let state = State::new(event);
         state.user().id
     };
+    connection.set_game_name("I grep things for you".to_string());
     // main loop time
     while let Ok(event) = connection.recv_event() {
         if let Event::MessageCreate(message) = event {
