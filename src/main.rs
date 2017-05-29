@@ -7,9 +7,10 @@ extern crate serde;
 extern crate serde_json;
 
 use std::collections::{HashSet, HashMap};
-use std::env;
 use std::cmp::{PartialEq, Eq};
+use std::env;
 use std::hash::{Hash, Hasher};
+use std::io;
 use std::time::{Duration, Instant};
 
 use discord::{Discord, State};
@@ -175,7 +176,7 @@ fn handle_message(message: &Message,
 fn main() {
     env_logger::init().unwrap();
     // state
-    let mut greps = HashSet::new();
+    let mut greps = serde_json::from_reader(io::stdin()).unwrap_or(HashSet::new());
     let mut timeouts = HashMap::new();
     // api
     let mut discord = Discord::from_bot_token(&env::var("DISCORD_BOT_TOKEN")
