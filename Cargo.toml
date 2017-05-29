@@ -7,6 +7,8 @@ authors = ["Neil Ashford <ashfordneil0@gmail.com>"]
 regex = "*"
 log = "*"
 env_logger = "*"
+serde = "*"
+serde_json = "*"
 
 [dependencies.discord]
 version = "*"
