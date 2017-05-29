@@ -10,3 +10,7 @@ Adds a new grep.
 Removes a regex.
 *@grepbot syntax*
 Prints the help information for regex, and the rust regex engine.
+*@grepbot source*
+Links to the github if you want to contribute.
+*@grepbot author*
+Links to the main contributor(s) if you have issues.

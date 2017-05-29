@@ -107,6 +107,10 @@ fn handle_command(message: &Message, greps: &mut HashSet<Grep>) -> String {
             .unwrap()
     } else if content == "syntax" {
         include_str!("syntax.md").into()
+    } else if content == "source" {
+        "https://github.com/TumblrCommunity/grepbot".into()
+    } else if content == "author" {
+        "talk to artemis (https://github.com/ashfordneil)".into()
     } else {
         include_str!("usage.md").into()
     }
