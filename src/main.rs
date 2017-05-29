@@ -1,5 +1,8 @@
 extern crate discord;
 extern crate regex;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
 use std::collections::{HashSet, HashMap};
 use std::env;
@@ -142,35 +145,50 @@ fn handle_message(message: &Message,
 }
 
 fn main() {
+    env_logger::init().unwrap();
     // state
     let mut greps = HashSet::new();
     let mut timeouts = HashMap::new();
     // api
-    let discord = Discord::from_bot_token(&env::var("DISCORD_BOT_TOKEN")
-                                               .expect("DISCORD_BOT_TOKEN not set"))
+    let mut discord = Discord::from_bot_token(&env::var("DISCORD_BOT_TOKEN")
+                                                   .expect("DISCORD_BOT_TOKEN not set"))
             .expect("Login Failed");
-    let (mut connection, event) = match discord.connect() {
-        Ok(conn) => conn,
-        Err(e) => panic!("Unable to connect to discord API: {}", e),
-    };
+    let (mut connection, event) = discord
+        .connect()
+        .expect("Could not connect to websocket API");
     let uid = {
         let state = State::new(event);
         state.user().id
     };
     connection.set_game_name("I grep things for you".to_string());
     // main loop time
-    while let Ok(event) = connection.recv_event() {
-        if let Event::MessageCreate(message) = event {
-            let response = if message.author.bot {
-                None
-            } else if message.mentions.iter().any(|user| user.id == uid) {
-                Some(handle_command(&message, &mut greps))
-            } else {
-                handle_message(&message, &greps, &mut timeouts)
-            };
-            let channel = message.channel_id;
-            if let Some(content) = response {
-                let _ = discord.send_message(channel, &content, "", false);
+    loop {
+        match connection.recv_event() {
+            Ok(event) => {
+                if let Event::MessageCreate(message) = event {
+                    let response = if message.author.bot {
+                        None
+                    } else if message.mentions.iter().any(|user| user.id == uid) {
+                        Some(handle_command(&message, &mut greps))
+                    } else {
+                        handle_message(&message, &greps, &mut timeouts)
+                    };
+                    if let Some(content) = response {
+                        match discord.send_message(message.channel_id, &content, "", false) {
+                            Ok(_) => (),
+                            Err(e) => error!("Could not send message: {}", e),
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                error!("Could not recieve event from discord: {}", e);
+                discord = Discord::from_bot_token(&env::var("DISCORD_BOT_TOKEN").unwrap())
+                    .expect("Login failed");
+                connection = discord
+                    .connect()
+                    .map(|(conn, _)| conn)
+                    .expect("Could not connect to websocket API");
             }
         }
     }

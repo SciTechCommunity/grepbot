@@ -5,6 +5,8 @@ authors = ["Neil Ashford <ashfordneil0@gmail.com>"]
 
 [dependencies]
 regex = "*"
+log = "*"
+env_logger = "*"
 
 [dependencies.discord]
 version = "*"
