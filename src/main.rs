@@ -134,6 +134,8 @@ fn handle_command(message: &Message, greps: &mut HashSet<Grep>) -> String {
                 }
             })
             .unwrap()
+    } else if content == "save" {
+        serde_json::to_string(greps).unwrap()
     } else if content == "syntax" {
         include_str!("syntax.md").into()
     } else if content == "source" {

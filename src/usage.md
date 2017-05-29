@@ -8,6 +8,8 @@ Lists the current greps that you have.
 Adds a new grep.
 *@grepbot remove <regex>*
 Removes a regex.
+*@grepbot save*
+Does a json dump of all the currently saved greps.
 *@grepbot syntax*
 Prints the help information for regex, and the rust regex engine.
 *@grepbot source*
