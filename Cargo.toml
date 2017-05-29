@@ -4,5 +4,8 @@ version = "0.1.0"
 authors = ["Neil Ashford <ashfordneil0@gmail.com>"]
 
 [dependencies]
-discord = "*"
 regex = "*"
+
+[dependencies.discord]
+version = "*"
+default-features = false
