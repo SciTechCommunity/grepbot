@@ -7,9 +7,7 @@ extern crate serde;
 extern crate serde_json;
 
 use std::collections::{HashSet, HashMap};
-use std::cmp::{PartialEq, Eq};
 use std::env;
-use std::hash::{Hash, Hasher};
 use std::io;
 use std::time::{Duration, Instant};
 
@@ -18,54 +16,11 @@ use discord::model::{Event, ChannelId, Message, UserId};
 
 use regex::Regex;
 
-use serde::{Serialize, Serializer, Deserialize, Deserializer};
-use serde::de::Error;
+
+mod grep;
+use grep::Grep;
 
 const TIMEOUT: u64 = 5 * 60; // 5 minutes
-
-/// Wrapper around a `Regex, UserId` tuple that implements `PartialEq`, `Eq` and `Hash` manually,
-/// using the `Regex::as_str()` function as the `Regex` object itself cannot be hashed.
-struct Grep(Regex, UserId);
-
-impl PartialEq<Grep> for Grep {
-    fn eq(&self, other: &Self) -> bool {
-        let Grep(ref regex, id) = *self;
-        let Grep(ref other_regex, other_id) = *other;
-
-        regex.as_str() == other_regex.as_str() && id == other_id
-    }
-}
-
-impl Eq for Grep {}
-
-impl Hash for Grep {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        let Grep(ref regex, id) = *self;
-        regex.as_str().hash(state);
-        id.hash(state);
-    }
-}
-
-impl Serialize for Grep {
-    fn serialize<S>(&self, serializer: &mut S) -> Result<(), <S as Serializer>::Error>
-        where S: Serializer
-    {
-        let Grep(ref regex, UserId(id)) = *self;
-        Serialize::serialize(&(regex.as_str(), id), serializer)
-    }
-}
-
-impl Deserialize for Grep {
-    fn deserialize<D>(deserializer: &mut D) -> Result<Self, <D as Deserializer>::Error>
-        where D: Deserializer
-    {
-        let (regex, id): (String, u64) = Deserialize::deserialize(deserializer)?;
-        let regex = Regex::new(&regex)
-            .map_err(|e| <D as Deserializer>::Error::custom(format!("{}", e)))?;
-        let id = UserId(id);
-        Ok(Grep(regex, id))
-    }
-}
 
 fn handle_command(message: &Message, greps: &mut HashSet<Grep>) -> String {
     let content = &message.content;
@@ -176,7 +131,7 @@ fn handle_message(message: &Message,
 fn main() {
     env_logger::init().unwrap();
     // state
-    let mut greps = serde_json::from_reader(io::stdin()).unwrap_or(HashSet::new());
+    let mut greps = serde_json::from_reader(io::stdin()).unwrap_or_default();
     let mut timeouts = HashMap::new();
     // api
     let mut discord = Discord::from_bot_token(&env::var("DISCORD_BOT_TOKEN")
