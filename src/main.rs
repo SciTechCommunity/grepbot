@@ -134,9 +134,7 @@ fn main() {
     let mut greps = serde_json::from_reader(io::stdin()).unwrap_or_default();
     let mut timeouts = HashMap::new();
     // api
-    let mut discord = Discord::from_bot_token(&env::var("DISCORD_BOT_TOKEN")
-                                                   .expect("DISCORD_BOT_TOKEN not set"))
-            .expect("Login Failed");
+    let mut discord = Discord::from_bot_token(env!("DISCORD_BOT_TOKEN")).expect("Login Failed");
     let (mut connection, event) = discord
         .connect()
         .expect("Could not connect to websocket API");
@@ -167,7 +165,7 @@ fn main() {
             }
             Err(e) => {
                 error!("Could not recieve event from discord: {}", e);
-                discord = Discord::from_bot_token(&env::var("DISCORD_BOT_TOKEN").unwrap())
+                discord = Discord::from_bot_token(env!("DISCORD_BOT_TOKEN"))
                     .expect("Login failed");
                 connection = discord
                     .connect()
