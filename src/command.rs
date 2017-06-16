@@ -78,7 +78,7 @@ fn add_grep(content: &str, greps: &mut HashSet<Grep>, author: &User) -> String {
                  Ok(regex) => {
                      if greps
                             .iter()
-                            .any(|&Grep(ref regex, id)| 
+                            .any(|&Grep(ref regex, id)| {
                                      id == author.id && regex.as_str() == pattern
                                  }) {
                          "Regex already exists".into()
