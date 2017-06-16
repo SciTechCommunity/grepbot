@@ -9,10 +9,13 @@ use std::time::{Duration, Instant};
 
 use discord::model::{ChannelId, Message, UserId};
 
+/// Message parser. Recieves a message and determines if it matches any greps that were not tagged
+/// within the time frame specified. If it does, generate a reply to the message that tags all
+/// users whos greps matched the message.
 pub fn handle(message: &Message,
-              greps: &HashSet<Grep>,
-              timeouts: &mut HashMap<(UserId, ChannelId), Instant>)
-              -> Option<String> {
+                      greps: &HashSet<Grep>,
+                      timeouts: &mut HashMap<(UserId, ChannelId), Instant>)
+                      -> Option<String> {
     let users: HashSet<_> = greps
         .iter()
         .filter(|&&Grep(ref regex, _)| regex.is_match(&message.content))
