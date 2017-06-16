@@ -39,7 +39,7 @@ pub fn handle(message: &Message, greps: &mut HashSet<Grep>) -> String {
     } else if content.starts_with("remove ") {
         remove_grep(content, greps, author)
     } else if content == "save" {
-        serde_json::to_string(greps).unwrap()
+        format!("`{}`", serde_json::to_string(greps).unwrap())
     } else if content == "syntax" {
         include_str!("syntax.md").into()
     } else if content == "source" {

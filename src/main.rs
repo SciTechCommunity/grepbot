@@ -24,7 +24,13 @@ pub const TIMEOUT: u64 = 5 * 60; // 5 minutes
 fn main() {
     env_logger::init().unwrap();
     // state
-    let mut greps = serde_json::from_reader(io::stdin()).unwrap_or_default();
+    let mut greps = match serde_json::from_reader(io::stdin()) {
+        Ok(greps) => greps,
+        Err(error) => {
+            warn!("Invalid grep file. {}", error);
+            Default::default()
+        }
+    };
     let mut timeouts = HashMap::new();
     // api
     let mut discord = Discord::from_bot_token(env!("DISCORD_BOT_TOKEN")).expect("Login Failed");
