@@ -7,101 +7,18 @@ extern crate serde;
 extern crate serde_json;
 
 use std::collections::{HashSet, HashMap};
-use std::env;
 use std::io;
 use std::time::{Duration, Instant};
 
 use discord::{Discord, State};
 use discord::model::{Event, ChannelId, Message, UserId};
 
-use regex::Regex;
-
-
 mod grep;
 use grep::Grep;
 
-const TIMEOUT: u64 = 5 * 60; // 5 minutes
+mod command;
 
-fn handle_command(message: &Message, greps: &mut HashSet<Grep>) -> String {
-    let content = &message.content;
-    let author = &message.author;
-    // split the message
-    let content = {
-        let index = match content.find(' ') {
-            Some(index) => index,
-            None => return include_str!("usage.md").into(),
-        };
-        let (mention, content) = content.split_at(index);
-        if !mention.starts_with("<@") {
-            return include_str!("usage.md").into();
-        }
-        &content[1..]
-    };
-    if content == "help" {
-        include_str!("help.md").into()
-    } else if content == "list" {
-        if greps.iter().any(|&Grep(_, id)| id == author.id) {
-            greps
-                .iter()
-                .filter(|&&Grep(_, id)| id == author.id)
-                .map(|&Grep(ref regex, _)| regex)
-                .fold(String::new(),
-                      |string, regex| format!("{}\n{}", string, regex))
-        } else {
-            "you have no greps".into()
-        }
-    } else if content.starts_with("add ") {
-        content
-            .splitn(2, ' ')
-            .nth(1)
-            .map(|pattern| match Regex::new(pattern) {
-                     Ok(regex) => {
-                         if greps
-                                .iter()
-                                .any(|&Grep(ref regex, id)| {
-                                         id == author.id && regex.as_str() == pattern
-                                     }) {
-                             "Regex already exists".into()
-                         } else {
-                             greps.insert(Grep(regex, author.id));
-                             "Regex added".into()
-                         }
-                     }
-                     Err(error) => format!("Invalid regex. {}", error),
-                 })
-            .unwrap()
-    } else if content.starts_with("remove ") {
-        content
-            .splitn(2, ' ')
-            .nth(1)
-            .map(|pattern| {
-                let mut removals = false;
-                greps.retain(|&Grep(ref regex, id)| if id == author.id &&
-                                                       regex.as_str() == pattern {
-                                 removals = true;
-                                 false
-                             } else {
-                                 true
-                             });
-                if removals {
-                    format!("Regex {} removed", pattern)
-                } else {
-                    format!("Regex {} was not found", pattern)
-                }
-            })
-            .unwrap()
-    } else if content == "save" {
-        serde_json::to_string(greps).unwrap()
-    } else if content == "syntax" {
-        include_str!("syntax.md").into()
-    } else if content == "source" {
-        "https://github.com/TumblrCommunity/grepbot".into()
-    } else if content == "author" {
-        "talk to artemis (https://github.com/ashfordneil)".into()
-    } else {
-        include_str!("usage.md").into()
-    }
-}
+const TIMEOUT: u64 = 5 * 60; // 5 minutes
 
 fn handle_message(message: &Message,
                   greps: &HashSet<Grep>,
@@ -151,7 +68,7 @@ fn main() {
                     let response = if message.author.bot {
                         None
                     } else if message.mentions.iter().any(|user| user.id == uid) {
-                        Some(handle_command(&message, &mut greps))
+                        Some(command::handle(&message, &mut greps))
                     } else {
                         handle_message(&message, &greps, &mut timeouts)
                     };
@@ -165,8 +82,7 @@ fn main() {
             }
             Err(e) => {
                 error!("Could not recieve event from discord: {}", e);
-                discord = Discord::from_bot_token(env!("DISCORD_BOT_TOKEN"))
-                    .expect("Login failed");
+                discord = Discord::from_bot_token(env!("DISCORD_BOT_TOKEN")).expect("Login failed");
                 connection = discord
                     .connect()
                     .map(|(conn, _)| conn)
