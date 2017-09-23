@@ -60,8 +60,9 @@ fn list_greps(greps: &HashSet<Grep>, author: &User) -> String {
             .iter()
             .filter(|&&Grep(_, id)| id == author.id)
             .map(|&Grep(ref regex, _)| regex)
-            .fold(String::new(),
-                  |string, regex| format!("{}\n{}", string, regex))
+            .fold(String::new(), |string, regex| {
+                format!("{}\n{}", string, regex)
+            })
     } else {
         "you have no greps".into()
     }
@@ -75,21 +76,17 @@ fn add_grep(content: &str, greps: &mut HashSet<Grep>, author: &User) -> String {
         .splitn(2, ' ')
         .nth(1)
         .map(|pattern| match Regex::new(pattern) {
-                 Ok(regex) => {
-                     if greps
-                            .iter()
-                            .any(|&Grep(ref regex, id)| {
-                                     id == author.id && regex.as_str() == pattern
-                                 }) {
-                         "Regex already exists".into()
+            Ok(regex) => if greps.iter().any(|&Grep(ref regex, id)| {
+                id == author.id && regex.as_str() == pattern
+            }) {
+                "Regex already exists".into()
 
-                     } else {
-                         greps.insert(Grep(regex, author.id));
-                         "Regex added".into()
-                     }
-                 }
-                 Err(error) => format!("Invalid regex. {}", error),
-             })
+            } else {
+                greps.insert(Grep(regex, author.id));
+                "Regex added".into()
+            },
+            Err(error) => format!("Invalid regex. {}", error),
+        })
         .unwrap()
 }
 
@@ -101,12 +98,14 @@ fn remove_grep(content: &str, greps: &mut HashSet<Grep>, author: &User) -> Strin
         .nth(1)
         .map(|pattern| {
             let mut removals = false;
-            greps.retain(|&Grep(ref regex, id)| if id == author.id && regex.as_str() == pattern {
-                             removals = true;
-                             false
-                         } else {
-                             true
-                         });
+            greps.retain(|&Grep(ref regex, id)| {
+                if id == author.id && regex.as_str() == pattern {
+                    removals = true;
+                    false
+                } else {
+                    true
+                }
+            });
             if removals {
                 format!("Regex {} removed", pattern)
             } else {

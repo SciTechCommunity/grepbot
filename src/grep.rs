@@ -1,11 +1,11 @@
-use std::cmp::{PartialEq, Eq};
+use std::cmp::{Eq, PartialEq};
 use std::hash::{Hash, Hasher};
 
 use discord::model::UserId;
 
 use regex::Regex;
 
-use serde::{Serialize, Serializer, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::Error;
 
 /// Wrapper around a `Regex, UserId` tuple that implements `PartialEq`, `Eq` and `Hash` manually,
@@ -33,7 +33,8 @@ impl Hash for Grep {
 
 impl Serialize for Grep {
     fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         let Grep(ref regex, UserId(id)) = *self;
         Serialize::serialize(&(regex.as_str(), id), serializer)
@@ -42,7 +43,8 @@ impl Serialize for Grep {
 
 impl<'de> Deserialize<'de> for Grep {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         let (regex, id): (String, u64) = Deserialize::deserialize(deserializer)?;
         let regex = Regex::new(&regex)
