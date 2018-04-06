@@ -3,7 +3,6 @@ extern crate serenity;
 #[macro_use]
 extern crate log;
 extern crate chrono;
-extern crate dotenv;
 extern crate fern;
 extern crate regex;
 extern crate serde;

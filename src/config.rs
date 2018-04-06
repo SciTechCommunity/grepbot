@@ -1,6 +1,5 @@
 use log::LevelFilter;
 use chrono::Utc;
-use dotenv;
 use fern;
 
 use std::env;
@@ -22,7 +21,6 @@ pub struct Config {
 impl Config {
     /// Will read environment variables, populate the config struct, and panic on error.
     pub fn new() -> Self {
-        dotenv::dotenv().unwrap();
         let discord_bot_token = env::var("DISCORD_BOT_TOKEN").unwrap();
         let storage_file = env::var("STORAGE_FILE").unwrap();
         let log_file = env::var("LOG_FILE").unwrap();
