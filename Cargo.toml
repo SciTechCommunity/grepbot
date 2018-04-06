@@ -1,18 +1,14 @@
 [package]
-authors = ["Neil Ashford <ashfordneil0@gmail.com>"]
 name = "grepbot"
-version = "0.1.0"
+version = "1.0.0"
+authors = ["Neil Ashford <ashfordneil0@gmail.com>"]
 
 [dependencies]
-chrono = "0.4.0"
-dotenv = "0.10.1"
-fern = "0.4.3"
-log = "0.3.8"
+serenity = "0.5.1"
+log = "0.4.1"
+fern = "0.5.5"
+serde = "1.0.37"
 mvdb = "0.2.1"
-regex = "0.2.2"
-serde = "1.0.15"
-serde_json = "1.0.3"
-
-[dependencies.discord]
-default-features = false
-git = "https://github.com/SpaceManiac/discord-rs"
+serde_json = "1.0.13"
+chrono = "0.4.1"
+regex = "0.2.10"

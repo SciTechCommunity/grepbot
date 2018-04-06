@@ -1,7 +1,7 @@
 use std::cmp::{Eq, PartialEq};
 use std::hash::{Hash, Hasher};
 
-use discord::model::UserId;
+use serenity::model::id::UserId;
 
 use regex::Regex;
 
@@ -53,3 +53,4 @@ impl<'de> Deserialize<'de> for Grep {
         Ok(Grep(regex, id))
     }
 }
+
