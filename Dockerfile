@@ -20,10 +20,8 @@ WORKDIR /application
 COPY --from=build /usr/src/app/target/release/grepbot .
 
 # Setup for logs and data storage
-RUN mkdir /var/log/grepbot
 RUN mkdir /var/lib/grepbot
 
-ENV LOG_FILE=/var/log/grepbot/log
 ENV STORAGE_FILE=/var/lib/grepbot/data
 
 # ...aaaaand Go!

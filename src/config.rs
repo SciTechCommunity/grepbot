@@ -3,6 +3,7 @@ use chrono::Utc;
 use fern;
 
 use std::env;
+use std::io;
 use std::time::Duration;
 
 /// The minimum time between two pings for a single user in a single channel - 5 minutes.
@@ -14,8 +15,6 @@ pub struct Config {
     pub discord_bot_token: String,
     /// The file used to store all greps.
     pub storage_file: String,
-    /// The log file that all output goes to.
-    pub log_file: String,
 }
 
 impl Config {
@@ -23,12 +22,10 @@ impl Config {
     pub fn new() -> Self {
         let discord_bot_token = env::var("DISCORD_BOT_TOKEN").unwrap();
         let storage_file = env::var("STORAGE_FILE").unwrap();
-        let log_file = env::var("LOG_FILE").unwrap();
 
         Config {
             discord_bot_token,
             storage_file,
-            log_file,
         }
     }
 
@@ -54,9 +51,11 @@ impl Config {
                 }
             })
             .level(LevelFilter::Warn)
-            .level_for("grepbot", LevelFilter::Info)
-            .chain(fern::log_file(&self.log_file).unwrap())
+            .level_for("grepbot", LevelFilter::Debug)
+            .chain(io::stdout())
             .apply()
             .unwrap();
+
+        info!("Started");
     }
 }

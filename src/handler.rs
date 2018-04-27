@@ -36,7 +36,7 @@ impl Handler {
     }
 
     fn is_self(&self, user: &User) -> bool {
-        user.discriminator == 9866 && user.name == "TestApp"
+        user.discriminator == 6795 && user.name == "GrepBot"
     }
 
     fn handle_command(&self, message: &Message) -> Option<String> {
@@ -198,6 +198,7 @@ impl EventHandler for Handler {
         let response = if message.author.bot {
             None
         } else if message.mentions.iter().any(|user| self.is_self(user)) {
+            debug!("Handling command {:?} from {:?}", message.content, message.author.name);
             self.handle_command(&message)
         } else {
             self.handle_message(&message)
