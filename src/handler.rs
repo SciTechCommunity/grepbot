@@ -71,6 +71,8 @@ impl Handler {
                 "https://github.com/TumblrCommunity/grepbot".into()
             } else if content == "author" {
                 "talk to artemis (https://github.com/ashfordneil)".into()
+            } else if content == "purge"{
+                Self::purge_greps(content,greps,author) 
             } else {
                 include_str!("usage.md").into()
             }
@@ -123,7 +125,18 @@ impl Handler {
             })
             .unwrap()
     }
-
+    /// Removes all greps from a user.
+    fn purge_greps(content: &str, greps: &mut HashSet<Grep>, author: 
+&User)->String{
+        ///probably very inefficient
+        ///should be able to just remove all greps at once
+        ///this is mostly to test the idea
+        for x in greps.iter(){
+            let y="remove ";
+            y.push_str(x);
+            remove_grep(y,greps,author);
+        }
+    }
     /// Removes a grep from a user. Accepts a message that beings with "remove ", and then removes the
     /// grep associated with the user whos regular expression is equal to the remainder of the message.
     fn remove_grep(content: &str, greps: &mut HashSet<Grep>, author: &User) -> String {
